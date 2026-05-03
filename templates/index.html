@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="animate-in" style="text-align:center; padding: 50px 0 30px;">
+    <div style="display:inline-flex; align-items:center; justify-content:center; width:72px; height:72px; border-radius:20px; background:var(--accent-glow); margin-bottom:20px;">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+        </svg>
+    </div>
+    <h1 style="font-size:38px; font-weight:800; letter-spacing:-1px; margin-bottom:10px; color:var(--text);">
+        Water Quality<br><span style="color:var(--accent);">Monitoring System</span>
+    </h1>
+    <p style="color:var(--text-secondary); font-size:15px; max-width:520px; margin:0 auto;">
+        Real-time IoT sensor data combined with machine learning to monitor pH, TDS, temperature,
+        and turbidity and classify water safety instantly.
+    </p>
+</div>
+
+<div class="grid-4 animate-in" style="margin-bottom:28px;">
+    <div class="card metric-card">
+        <div class="metric-icon" style="background:rgba(14,165,233,0.12); color:#0ea5e9;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+        </div>
+        <div class="metric-label">pH Level</div>
+        <div class="metric-value" style="color:#0ea5e9;">{{ "%.1f"|format(ph) }}</div>
+    </div>
+    <div class="card metric-card">
+        <div class="metric-icon" style="background:rgba(139,92,246,0.12); color:#8b5cf6;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
+        </div>
+        <div class="metric-label">TDS</div>
+        <div class="metric-value" style="color:#8b5cf6;">{{ "%.0f"|format(tds) }}<span class="metric-unit">ppm</span></div>
+    </div>
+    <div class="card metric-card">
+        <div class="metric-icon" style="background:rgba(245,158,11,0.12); color:#f59e0b;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+        </div>
+        <div class="metric-label">Temperature</div>
+        <div class="metric-value" style="color:#f59e0b;">{{ "%.1f"|format(temp) }}<span class="metric-unit">&deg;C</span></div>
+    </div>
+    <div class="card metric-card">
+        <div class="metric-icon" style="background:rgba(16,185,129,0.12); color:#10b981;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <div class="metric-label">Turbidity</div>
+        <div class="metric-value" style="color:#10b981;">{{ "%.1f"|format(turbidity) }}<span class="metric-unit">NTU</span></div>
+    </div>
+</div>
+
+<div class="grid-2 animate-in" style="margin-bottom:28px;">
+    <div class="card" style="padding:28px;">
+        <div class="section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            AI Classification
+        </div>
+        <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+            <div style="width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px;
+                {% if prediction == 'Unsafe' %}background:var(--danger-bg); color:var(--danger);
+                {% elif prediction == 'Drinking' %}background:var(--success-bg); color:var(--success);
+                {% else %}background:var(--accent-glow); color:var(--accent);{% endif %}">
+                {% if prediction == 'Unsafe' %}
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                {% elif prediction == 'Drinking' %}
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                {% else %}
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                {% endif %}
+            </div>
+            <div>
+                <div style="font-size:22px; font-weight:800; letter-spacing:-0.5px;
+                    {% if prediction == 'Unsafe' %}color:var(--danger);
+                    {% elif prediction == 'Drinking' %}color:var(--success);
+                    {% else %}color:var(--accent);{% endif %}">
+                    {{ prediction }}
+                </div>
+                <div style="font-size:13px; color:var(--text-secondary);">Current water classification</div>
+            </div>
+        </div>
+        <a href="/ml" style="display:inline-flex; align-items:center; gap:6px; color:var(--accent); font-size:13px; font-weight:600; text-decoration:none;">
+            View full analysis
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+    </div>
+
+    <div class="card" style="padding:28px;">
+        <div class="section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Quick Navigation
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <a href="/live" style="text-decoration:none; padding:14px; border-radius:10px; background:var(--bg-secondary); border:1px solid var(--border); display:flex; align-items:center; gap:10px; transition:all 0.2s; color:var(--text);"
+               onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span style="font-size:13px; font-weight:600;">Live Data</span>
+            </a>
+            <a href="/charts" style="text-decoration:none; padding:14px; border-radius:10px; background:var(--bg-secondary); border:1px solid var(--border); display:flex; align-items:center; gap:10px; transition:all 0.2s; color:var(--text);"
+               onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                <span style="font-size:13px; font-weight:600;">Analytics</span>
+            </a>
+            <a href="/history" style="text-decoration:none; padding:14px; border-radius:10px; background:var(--bg-secondary); border:1px solid var(--border); display:flex; align-items:center; gap:10px; transition:all 0.2s; color:var(--text);"
+               onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span style="font-size:13px; font-weight:600;">History</span>
+            </a>
+            <a href="/ml" style="text-decoration:none; padding:14px; border-radius:10px; background:var(--bg-secondary); border:1px solid var(--border); display:flex; align-items:center; gap:10px; transition:all 0.2s; color:var(--text);"
+               onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <span style="font-size:13px; font-weight:600;">AI Predict</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2 animate-in" style="margin-bottom:20px;">
+    <div class="card-flat" style="padding:28px;">
+        <div class="section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            About the System
+        </div>
+        <p style="font-size:13.5px; color:var(--text-secondary); line-height:1.7; margin-bottom:12px;">
+            This system is an IoT and machine learning based water quality monitoring platform.
+            It continuously collects real-time sensor data including pH level, total dissolved solids (TDS),
+            temperature, and turbidity from a cloud-connected IoT device via ThingSpeak.
+        </p>
+        <p style="font-size:13.5px; color:var(--text-secondary); line-height:1.7; margin-bottom:12px;">
+            The data is processed using a trained TensorFlow Lite machine learning model that classifies water
+            quality into categories such as Drinking, Irrigation, Washing, or Unsafe.
+        </p>
+        <p style="font-size:13.5px; color:var(--text-secondary); line-height:1.7;">
+            The dashboard provides real-time monitoring, historical analysis, and AI-based predictions to
+            support decision-making in water safety management systems.
+        </p>
+    </div>
+
+    <div class="card-flat" style="padding:28px;">
+        <div class="section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            System Features
+        </div>
+        <ul style="list-style:none; display:flex; flex-direction:column; gap:10px;">
+            <li style="display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:8px; background:var(--bg-secondary); font-size:13.5px; color:var(--text-secondary);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                Real-time IoT sensor data visualization
+            </li>
+            <li style="display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:8px; background:var(--bg-secondary); font-size:13.5px; color:var(--text-secondary);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                Cloud data integration via ThingSpeak API
+            </li>
+            <li style="display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:8px; background:var(--bg-secondary); font-size:13.5px; color:var(--text-secondary);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                Machine learning-based water classification
+            </li>
+            <li style="display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:8px; background:var(--bg-secondary); font-size:13.5px; color:var(--text-secondary);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                Historical trend analysis
+            </li>
+            <li style="display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:8px; background:var(--bg-secondary); font-size:13.5px; color:var(--text-secondary);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                Interactive data charts
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div class="card-flat animate-in" style="padding:28px;">
+    <div class="section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        How It Works
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:20px;">
+        <div>
+            <div style="font-size:13px; font-weight:700; color:var(--accent); margin-bottom:4px;">1. Collect</div>
+            <div style="font-size:13px; color:var(--text-secondary);">IoT sensors measure pH, TDS, temperature, and turbidity in real-time, pushing data to ThingSpeak cloud.</div>
+        </div>
+        <div>
+            <div style="font-size:13px; font-weight:700; color:var(--accent); margin-bottom:4px;">2. Analyze</div>
+            <div style="font-size:13px; color:var(--text-secondary);">Data is fetched and processed through trend analysis, threshold checks, and historical comparison.</div>
+        </div>
+        <div>
+            <div style="font-size:13px; font-weight:700; color:var(--accent); margin-bottom:4px;">3. Classify</div>
+            <div style="font-size:13px; color:var(--text-secondary);">A TensorFlow Lite model classifies water as Drinking, Irrigation, Washing, or Unsafe.</div>
+        </div>
+        <div>
+            <div style="font-size:13px; font-weight:700; color:var(--accent); margin-bottom:4px;">4. Alert</div>
+            <div style="font-size:13px; color:var(--text-secondary);">The dashboard surfaces real-time alerts and predictions so you can act immediately on water quality changes.</div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

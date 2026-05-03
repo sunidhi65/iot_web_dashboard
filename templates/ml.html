@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="page-header animate-in">
+    <h1>AI Prediction Engine</h1>
+    <p>TensorFlow Lite classification based on latest sensor readings</p>
+</div>
+
+<!-- Main prediction card -->
+<div class="card animate-in" style="padding:32px; text-align:center; margin-bottom:20px;
+    {% if prediction == 'Unsafe' %}border-color: var(--danger);
+    {% elif prediction == 'Drinking' %}border-color: var(--success);
+    {% endif %}">
+
+    <div style="display:inline-flex; align-items:center; justify-content:center; width:80px; height:80px; border-radius:22px; margin-bottom:18px;
+        {% if prediction == 'Unsafe' %}background:var(--danger-bg); color:var(--danger);
+        {% elif prediction == 'Drinking' %}background:var(--success-bg); color:var(--success);
+        {% elif prediction == 'Washing' %}background:var(--accent-glow); color:var(--accent);
+        {% else %}background:var(--warning-bg); color:var(--warning);{% endif %}">
+        {% if prediction == 'Unsafe' %}
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        {% elif prediction == 'Drinking' %}
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        {% else %}
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+        {% endif %}
+    </div>
+
+    <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-secondary); margin-bottom:8px;">
+        Water Classification
+    </div>
+    <div style="font-size:42px; font-weight:800; letter-spacing:-1.5px; margin-bottom:8px;
+        {% if prediction == 'Unsafe' %}color:var(--danger);
+        {% elif prediction == 'Drinking' %}color:var(--success);
+        {% elif prediction == 'Washing' %}color:var(--accent);
+        {% else %}color:var(--warning);{% endif %}">
+        {{ prediction }}
+    </div>
+    <div style="font-size:14px; color:var(--text-secondary);">
+        {% if prediction == 'Drinking' %}Water is safe for human consumption
+        {% elif prediction == 'Irrigation' %}Suitable for agricultural irrigation
+        {% elif prediction == 'Washing' %}Can be used for washing purposes
+        {% elif prediction == 'Unsafe' %}Water is NOT safe for any use. Immediate attention required
+        {% else %}Unable to classify water quality
+        {% endif %}
+    </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:20px;">
+
+    <!-- Confidence Scores -->
+    <div class="card animate-in" style="padding:24px;">
+        <div class="section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+            Confidence Scores
+        </div>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+            {% set colors = ['#0ea5e9', '#f59e0b', '#8b5cf6', '#ef4444'] %}
+            {% set bgs = ['rgba(14,165,233,0.12)', 'rgba(245,158,11,0.12)', 'rgba(139,92,246,0.12)', 'rgba(239,68,68,0.12)'] %}
+            {% for i in range(4) %}
+            <div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span style="font-size:13px; font-weight:600;
+                        {% if i == pred_index %}color:{{ colors[i] }};{% else %}color:var(--text-secondary);{% endif %}">
+                        {{ labels[i] }}
+                        {% if i == pred_index %}
+                            <span style="font-size:10px; background:{{ bgs[i] }}; padding:2px 8px; border-radius:4px; margin-left:6px;">PREDICTED</span>
+                        {% endif %}
+                    </span>
+                    <span style="font-size:13px; font-weight:700;
+                        {% if i == pred_index %}color:{{ colors[i] }};{% else %}color:var(--text-secondary);{% endif %}">
+                        {{ "%.1f"|format(probabilities[i] * 100) }}%
+                    </span>
+                </div>
+                <div style="height:8px; border-radius:4px; background:var(--border); overflow:hidden;">
+                    <div style="height:100%; border-radius:4px; width:{{ (probabilities[i] * 100)|int }}%;
+                        background:{{ colors[i] }}; transition:width 1s ease;
+                        {% if i != pred_index %}opacity:0.4;{% endif %}"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Input readings used -->
+    <div class="card animate-in" style="padding:24px;">
+        <div class="section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Model Input Data
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-radius:10px; background:var(--bg-secondary);">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:8px; height:8px; border-radius:50%; background:#0ea5e9;"></div>
+                    <span style="font-size:13px; color:var(--text-secondary);">pH Level</span>
+                </div>
+                <span style="font-size:15px; font-weight:700;">{{ "%.2f"|format(ph) }}
+                    {% if ph >= 6.5 and ph <= 8.5 %}
+                        <span class="badge badge-safe" style="margin-left:6px;">OK</span>
+                    {% else %}
+                        <span class="badge badge-danger" style="margin-left:6px;">!</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-radius:10px; background:var(--bg-secondary);">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:8px; height:8px; border-radius:50%; background:#f59e0b;"></div>
+                    <span style="font-size:13px; color:var(--text-secondary);">Temperature</span>
+                </div>
+                <span style="font-size:15px; font-weight:700;">{{ "%.1f"|format(temp) }}&deg;C
+                    {% if temp <= 35 %}
+                        <span class="badge badge-safe" style="margin-left:6px;">OK</span>
+                    {% else %}
+                        <span class="badge badge-warning" style="margin-left:6px;">!</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-radius:10px; background:var(--bg-secondary);">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:8px; height:8px; border-radius:50%; background:#8b5cf6;"></div>
+                    <span style="font-size:13px; color:var(--text-secondary);">TDS</span>
+                </div>
+                <span style="font-size:15px; font-weight:700;">{{ "%.0f"|format(tds) }} ppm
+                    {% if tds <= 500 %}
+                        <span class="badge badge-safe" style="margin-left:6px;">OK</span>
+                    {% else %}
+                        <span class="badge badge-danger" style="margin-left:6px;">!</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Issues -->
+        <div class="section-title" style="margin-top:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Alerts
+        </div>
+        {% if issues|length == 0 %}
+            <div style="padding:12px 14px; border-radius:10px; background:var(--success-bg); font-size:13px; font-weight:600; color:var(--success); display:flex; align-items:center; gap:8px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                No issues detected
+            </div>
+        {% else %}
+            <div style="display:flex; flex-direction:column; gap:6px;">
+            {% for issue in issues %}
+                <div style="padding:10px 14px; border-radius:10px; background:var(--danger-bg); font-size:13px; font-weight:600; color:var(--danger); display:flex; align-items:center; gap:8px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    {{ issue }}
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Model info -->
+<div class="card-flat animate-in" style="padding:20px;">
+    <div style="display:flex; flex-wrap:wrap; gap:24px; font-size:12.5px; color:var(--text-secondary);">
+        <div><span style="font-weight:600; color:var(--text);">Model:</span> TensorFlow Lite</div>
+        <div><span style="font-weight:600; color:var(--text);">Classes:</span> Drinking, Irrigation, Washing, Unsafe</div>
+        <div><span style="font-weight:600; color:var(--text);">Input Features:</span> pH, Temperature, TDS</div>
+        <div><span style="font-weight:600; color:var(--text);">Inference:</span> Real-time on server</div>
+    </div>
+</div>
+
+{% endblock %}

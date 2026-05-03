@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaMonitor - Water Quality Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body.dark {
+            --bg: #060b18;
+            --bg-secondary: #0c1225;
+            --card: #111827;
+            --card-hover: #162031;
+            --text: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --nav: rgba(6, 11, 24, 0.85);
+            --border: #1e293b;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.15);
+            --success: #22c55e;
+            --success-bg: rgba(34, 197, 94, 0.1);
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.1);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+            --gradient-1: linear-gradient(135deg, #0ea5e9, #38bdf8);
+            --gradient-2: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            --gradient-3: linear-gradient(135deg, #f59e0b, #fbbf24);
+            --gradient-4: linear-gradient(135deg, #10b981, #34d399);
+        }
+
+        body.light {
+            --bg: #f1f5f9;
+            --bg-secondary: #e2e8f0;
+            --card: #ffffff;
+            --card-hover: #f8fafc;
+            --text: #0f172a;
+            --text-secondary: #475569;
+            --nav: rgba(241, 245, 249, 0.85);
+            --border: #cbd5e1;
+            --accent: #0284c7;
+            --accent-glow: rgba(2, 132, 199, 0.1);
+            --success: #16a34a;
+            --success-bg: rgba(22, 163, 74, 0.08);
+            --danger: #dc2626;
+            --danger-bg: rgba(220, 38, 38, 0.08);
+            --warning: #d97706;
+            --warning-bg: rgba(217, 119, 6, 0.08);
+            --shadow: 0 4px 24px rgba(0,0,0,0.06);
+            --gradient-1: linear-gradient(135deg, #0284c7, #0ea5e9);
+            --gradient-2: linear-gradient(135deg, #7c3aed, #8b5cf6);
+            --gradient-3: linear-gradient(135deg, #d97706, #f59e0b);
+            --gradient-4: linear-gradient(135deg, #059669, #10b981);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            min-height: 100vh;
+        }
+
+        /* NAVBAR */
+        nav {
+            background: var(--nav);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 0 28px;
+            display: flex;
+            align-items: center;
+            height: 60px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-brand {
+            font-weight: 800;
+            font-size: 17px;
+            color: var(--accent);
+            letter-spacing: -0.3px;
+            margin-right: 32px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-brand svg { flex-shrink: 0; }
+
+        .nav-links { display: flex; gap: 4px; }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 500;
+            padding: 7px 14px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+            background: var(--accent-glow);
+        }
+
+        .nav-links a.active {
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .nav-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+
+        .theme-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .status-pill {
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 5px 14px;
+            border-radius: 20px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .status-pill.safe {
+            color: var(--success);
+            background: var(--success-bg);
+            border: 1px solid var(--success);
+        }
+
+        .status-pill.danger {
+            color: var(--danger);
+            background: var(--danger-bg);
+            border: 1px solid var(--danger);
+            animation: pulse-danger 2s infinite;
+        }
+
+        @keyframes pulse-danger {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* CONTAINER */
+        .container {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 28px 24px 60px;
+        }
+
+        /* PAGE HEADER */
+        .page-header {
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 22px;
+            color: var(--text);
+            transition: all 0.25s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .card:hover {
+            border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+            transform: translateY(-2px);
+            box-shadow: var(--shadow), 0 0 0 1px var(--accent-glow);
+        }
+
+        .card-flat {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 22px;
+            color: var(--text);
+            box-shadow: var(--shadow);
+        }
+
+        /* GRID */
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+        @media (max-width: 900px) {
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .grid-4, .grid-2 { grid-template-columns: 1fr; }
+            nav { padding: 0 14px; }
+            .nav-brand { margin-right: 16px; font-size: 15px; }
+            .nav-links a { font-size: 12px; padding: 6px 10px; }
+            .container { padding: 18px 14px 40px; }
+            .page-header h1 { font-size: 22px; }
+        }
+
+        /* TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 13.5px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        th {
+            font-weight: 600;
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover td {
+            background: var(--accent-glow);
+        }
+
+        /* METRIC CARD */
+        .metric-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card .metric-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 14px;
+        }
+
+        .metric-card .metric-label {
+            font-size: 12.5px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .metric-card .metric-value {
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .metric-card .metric-unit {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-left: 4px;
+        }
+
+        .metric-card .metric-bar {
+            margin-top: 14px;
+            height: 4px;
+            border-radius: 4px;
+            background: var(--border);
+            overflow: hidden;
+        }
+
+        .metric-card .metric-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .metric-card .metric-status {
+            margin-top: 8px;
+            font-size: 11.5px;
+            font-weight: 500;
+        }
+
+        /* BADGE */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+
+        .badge-safe { color: var(--success); background: var(--success-bg); }
+        .badge-danger { color: var(--danger); background: var(--danger-bg); }
+        .badge-warning { color: var(--warning); background: var(--warning-bg); }
+        .badge-info { color: var(--accent); background: var(--accent-glow); }
+
+        /* SECTION TITLE */
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* FADE IN ANIMATION */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-in {
+            animation: fadeUp 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        .animate-in:nth-child(1) { animation-delay: 0s; }
+        .animate-in:nth-child(2) { animation-delay: 0.07s; }
+        .animate-in:nth-child(3) { animation-delay: 0.14s; }
+        .animate-in:nth-child(4) { animation-delay: 0.21s; }
+        .animate-in:nth-child(5) { animation-delay: 0.28s; }
+        .animate-in:nth-child(6) { animation-delay: 0.35s; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+    </style>
+</head>
+
+<body class="dark">
+
+<nav>
+    <div class="nav-brand">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+        </svg>
+        AquaMonitor
+    </div>
+
+    <div class="nav-links" id="navLinks">
+        <a href="/" data-page="home">Home</a>
+        <a href="/live" data-page="live">Live</a>
+        <a href="/charts" data-page="charts">Charts</a>
+        <a href="/history" data-page="history">History</a>
+        <a href="/ml" data-page="ml">AI Predict</a>
+    </div>
+
+    <div class="nav-right">
+        <div class="status-pill {% if alert == 'Unsafe Water Detected' %}danger{% else %}safe{% endif %}">
+            <span class="status-dot"></span>
+            {{ alert if alert else 'System Normal' }}
+        </div>
+        <button class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme">
+            <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+        </button>
+    </div>
+</nav>
+
+<div class="container">
+    {% block content %}{% endblock %}
+</div>
+
+<script>
+function setTheme(theme) {
+    document.body.className = theme;
+    const icon = document.getElementById("themeIcon");
+    if (theme === "dark") {
+        icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+    } else {
+        icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+    }
+    localStorage.setItem("theme", theme);
+}
+
+function toggleTheme() {
+    const current = document.body.classList.contains("dark") ? "dark" : "light";
+    setTheme(current === "dark" ? "light" : "dark");
+}
+
+(function() {
+    const saved = localStorage.getItem("theme") || "dark";
+    setTheme(saved);
+
+    const path = window.location.pathname;
+    const map = {"/": "home", "/live": "live", "/charts": "charts", "/history": "history", "/ml": "ml"};
+    const page = map[path];
+    if (page) {
+        const link = document.querySelector(`[data-page="${page}"]`);
+        if (link) link.classList.add("active");
+    }
+})();
+</script>
+
+</body>
+</html>
